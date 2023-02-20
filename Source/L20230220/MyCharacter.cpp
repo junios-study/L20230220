@@ -8,6 +8,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+
 
 // Sets default values
 AMyCharacter::AMyCharacter()
@@ -61,8 +63,8 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 		EIC->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
 		EIC->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
-		EIC->BindAction(MoveAction, ETriggerEvent::Completed, this, &AMyCharacter::Move);
-		EIC->BindAction(LookAction, ETriggerEvent::Completed, this, &AMyCharacter::Look);
+		EIC->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyCharacter::Move);
+		EIC->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyCharacter::Look);
 	}
 
 
@@ -71,9 +73,23 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void AMyCharacter::Move(const FInputActionValue& Value)
 {
+	FVector2D MoveVector = Value.Get<FVector2D>();
+
+	FRotator ForwardRotation = FRotator(0, GetControlRotation().Yaw, 0);
+	FVector ForwardVector = UKismetMathLibrary::GetForwardVector(ForwardRotation);
+
+	FRotator RightRotation = FRotator(0, GetControlRotation().Yaw, GetControlRotation().Roll);
+	FVector RightVector = UKismetMathLibrary::GetRightVector(RightRotation);
+
+	AddMovementInput(ForwardVector, MoveVector.Y);
+	AddMovementInput(RightVector, MoveVector.X);
 }
 
 void AMyCharacter::Look(const FInputActionValue& Value)
 {
+	FVector2D LookVector = Value.Get<FVector2D>();
+
+	AddControllerPitchInput(LookVector.Y);
+	AddControllerYawInput(LookVector.X);
 }
 
